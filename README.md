@@ -19,12 +19,12 @@ DeepSeek Harness（DSH）Web 客户端插件：为触屏设备提供终端虚拟
 **方式一：命令行**
 
 ```bash
-dsh plugin --profile <你的profile> add https://github.com/MuGu/dsh-terminal-keys
+dsh plugin --profile <你的profile> add https://github.com/gmugu/dsh-terminal-keys
 ```
 
 **方式二：Web 界面**
 
-打开 DSH Web 界面左侧栏的 **Plugins** 页面，在安装入口粘贴仓库地址 `https://github.com/MuGu/dsh-terminal-keys` 安装。
+打开 DSH Web 界面左侧栏的 **Plugins** 页面，在安装入口粘贴仓库地址 `https://github.com/gmugu/dsh-terminal-keys` 安装。
 
 安装后组合包默认启用；若界面未立即出现，刷新页面或重启该 profile。
 
@@ -69,7 +69,7 @@ A DeepSeek Harness (DSH) Web client plugin that adds a touch terminal key panel 
 Requires DSH `>= 0.2.0-rc.2` and Node `>= 24`.
 
 ```bash
-dsh plugin --profile <profile> add https://github.com/MuGu/dsh-terminal-keys
+dsh plugin --profile <profile> add https://github.com/gmugu/dsh-terminal-keys
 ```
 
 Or paste the repository URL into the install box of the **Plugins** page in the DSH Web UI.

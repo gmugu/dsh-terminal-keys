@@ -8,12 +8,12 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MuGu/dsh-terminal-keys.git"
+    "url": "git+https://github.com/gmugu/dsh-terminal-keys.git"
   },
   "bugs": {
-    "url": "https://github.com/MuGu/dsh-terminal-keys/issues"
+    "url": "https://github.com/gmugu/dsh-terminal-keys/issues"
   },
-  "homepage": "https://github.com/MuGu/dsh-terminal-keys#readme",
+  "homepage": "https://github.com/gmugu/dsh-terminal-keys#readme",
   "keywords": [
     "deepseek-harness",
     "dsh",
