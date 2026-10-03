@@ -1,0 +1,3 @@
+- insert:
+    - id: terminal-keys
+      name: dsh-terminal-keys

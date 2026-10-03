@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Debug / verification scratch area
+.verify/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
