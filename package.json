@@ -1,16 +1,49 @@
 {
   "name": "dsh-terminal-keys",
   "version": "1.0.0",
+  "description": "Touch-friendly terminal key panel (Esc/Tab/sticky Ctrl+Alt + arrows) for DeepSeek Harness Web on phones.",
+  "license": "MIT",
+  "author": "MuGu",
   "private": true,
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MuGu/dsh-terminal-keys.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MuGu/dsh-terminal-keys/issues"
+  },
+  "homepage": "https://github.com/MuGu/dsh-terminal-keys#readme",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "terminal",
+    "touch",
+    "mobile"
+  ],
+  "engines": {
+    "node": ">=24",
+    "dsh": ">=0.2.0-rc.2"
+  },
   "main": "index.js",
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json"
+  ],
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
   },
   "dsh": {
-    "bundle": { "patch": "./cordis.patch.yml" },
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
       "immediately": true,
