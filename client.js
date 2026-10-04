@@ -78,6 +78,11 @@ window.__ModuleLoader__.load({
 		 * The panel is a fixed 4×2 grid (Esc Tab Ctrl Alt / arrows). Ctrl and Alt are
 		 * sticky modifiers that compose with the user's own keyboard: armed bare keys
 		 * are rewritten into control/Meta sequences before the terminal sees them.
+		 *
+		 * Visibility refresh is event-driven wherever the platform offers events
+		 * (mounted session, open-tab membership, pointer mode, the active terminal's
+		 * state and navigation stores); a slow 1s poll remains only as the fallback
+		 * for the two pull-only facts — the active tab and sidebar expansion.
 		 */
 		function createWidget(ctx) {
 			const t = ctx.locale && ctx.locale.bind ? ctx.locale.bind(NAMESPACE) : (key) => key;
@@ -104,6 +109,13 @@ window.__ModuleLoader__.load({
 			let unsubs = [];
 			let dragCleanups = [];
 			let pos = null;
+			// Live event sources for the current terminal occurrence: its view.state
+			// store and its tab-domain navigation store. Swapped by identity whenever
+			// the active terminal changes; both torn down in destroy().
+			let stateUnsub = null;
+			let navUnsub = null;
+			let watchedView = null;
+			let watchedNav = null;
 
 			const el = (tag, className, text) => {
 				const node = document.createElement(tag);
@@ -191,9 +203,9 @@ window.__ModuleLoader__.load({
 
 			const activeTerminalView = () => {
 				const sessionId = ctx.sidebarRight.mounted.getSnapshot();
-				if (!sessionId) return { hasTerminal: false, view: undefined };
+				if (!sessionId) return { hasTerminal: false, view: undefined, nav: undefined };
 				const tab = ctx.sidebarRight.active();
-				if (!tab || tab.kind !== 'terminal') return { hasTerminal: false, view: undefined };
+				if (!tab || tab.kind !== 'terminal') return { hasTerminal: false, view: undefined, nav: undefined };
 				try {
 					const occurrence = ctx.sidebarRight.tabDomain.occurrence(sessionId, { id: tab.id });
 					const navigation = occurrence.navigation.getSnapshot();
@@ -201,10 +213,37 @@ window.__ModuleLoader__.load({
 					const terminalId = params !== undefined && 'terminalId' in params ? params.terminalId : undefined;
 					const shellPath = params !== undefined && 'shellPath' in params ? params.shellPath : undefined;
 					const view = ctx.webTerminals.view(sessionId, tab.id, navigation.address, terminalId, shellPath);
-					return { hasTerminal: true, view };
+					return { hasTerminal: true, view, nav: occurrence.navigation };
 				} catch {
-					return { hasTerminal: false, view: undefined };
+					return { hasTerminal: false, view: undefined, nav: undefined };
 				}
+			};
+
+			// ---- live subscriptions to the active terminal's own stores ----
+			// view.state also ticks on every screen frame, so its listener refreshes
+			// only when `writable` flips; navigation fires once per real navigation.
+			const watchView = (view) => {
+				if (view === watchedView) return;
+				if (stateUnsub) stateUnsub();
+				stateUnsub = null;
+				watchedView = view;
+				if (view && view.state && view.state.subscribe) {
+					let lastWritable = !!view.state.getSnapshot().writable;
+					stateUnsub = view.state.subscribe(() => {
+						const writable = !!view.state.getSnapshot().writable;
+						if (writable !== lastWritable) {
+							lastWritable = writable;
+							update();
+						}
+					});
+				}
+			};
+			const watchNavigation = (nav) => {
+				if (nav === watchedNav) return;
+				if (navUnsub) navUnsub();
+				navUnsub = null;
+				watchedNav = nav;
+				if (nav && nav.subscribe) navUnsub = nav.subscribe(update);
 			};
 
 			const send = (sequence, after) => {
@@ -337,8 +376,26 @@ window.__ModuleLoader__.load({
 				card.appendChild(flashNode);
 			};
 
+			/** Any terminal tab exists for the on-screen session; gates the fallback poll. */
+			const anyTerminalTab = () => {
+				try {
+					const sessionId = ctx.sidebarRight.mounted.getSnapshot();
+					if (!sessionId) return false;
+					const tabs = ctx.sidebarRight.openTabs.getSnapshot();
+					return tabs.some((entry) => entry.sessionId === sessionId && entry.kind === 'terminal');
+				} catch {
+					return true; // fail open: run the full check instead of skipping
+				}
+			};
+
 			const update = () => {
-				const { hasTerminal, view } = activeTerminalView();
+				const shown = card.style.display !== 'none';
+				// cheap gate first: a hidden panel in an impossible environment (not a
+				// touch device, or no terminal tab at all) skips every store read
+				if (!shown && (!touchOnly() || !anyTerminalTab())) return;
+				const { hasTerminal, view, nav } = activeTerminalView();
+				watchView(view);
+				watchNavigation(nav);
 				const state = view ? view.state.getSnapshot() : undefined;
 				const writable = !!(state && state.writable);
 				let expanded = false;
@@ -426,7 +483,10 @@ window.__ModuleLoader__.load({
 						const mq = window.matchMedia(query);
 						if (mq.addEventListener) mq.addEventListener('change', onPointerMode);
 					}
-					pollTimer = setInterval(update, 1000);
+					// fallback poll: the active tab and sidebar expansion have no public
+				// events, so a slow tick re-checks them; update() gates itself off
+				// entirely in impossible states
+				pollTimer = setInterval(update, 1000);
 					update();
 				},
 				destroy() {
@@ -435,6 +495,12 @@ window.__ModuleLoader__.load({
 					if (pollTimer) clearInterval(pollTimer);
 					for (const unsubscribe of unsubs) unsubscribe();
 					unsubs = [];
+					if (stateUnsub) stateUnsub();
+					if (navUnsub) navUnsub();
+					stateUnsub = null;
+					navUnsub = null;
+					watchedView = null;
+					watchedNav = null;
 					for (const cleanup of dragCleanups) cleanup();
 					dragCleanups = [];
 					window.removeEventListener('resize', onResize);

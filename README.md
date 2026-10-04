@@ -31,6 +31,7 @@ dsh plugin --profile <你的profile> add https://github.com/gmugu/dsh-terminal-k
 ## 实现要点
 
 - 注册席位 `shell.overlay`（声明性），实际 UI 为 body 级浮动面板（z-index 2000）：外壳浮动层是 z-index 20，会被展开的右侧栏（z-index 40）盖住，故必须挂 body
+- 可见性刷新以事件为主：会话（`mounted`）、tab 成员（`openTabs`）、指针模式（`matchMedia`）、终端可写状态（`view.state`）与 tab 内终端切换（`occurrence.navigation`）均有订阅；1 秒轮询仅兜底两个官方无事件的拉取项——活动 tab 与右侧栏展开，且先做零成本门卫判断再进入正文检查
 - 写入路径：`ctx.sidebarRight.active()` → `tabDomain.occurrence().navigation` → `ctx.webTerminals.view(...)` 取官方终端同一 `TerminalView` 实例后 `write()`，不侵入官方终端 UI
 - Host 侧为空壳；客户端模块见 [client.js](client.js)
 
