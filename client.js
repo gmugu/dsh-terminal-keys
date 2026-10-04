@@ -51,8 +51,12 @@ window.__ModuleLoader__.load({
 			'.tk-grip{color:var(--dsw-alias-label-tertiary);font-size:11px;margin-right:4px;flex:none}',
 			'.tk-main{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}',
 			'.tk-key{min-width:0;height:40px;border-radius:8px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-size:14px;font-weight:500;font-family:inherit;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;cursor:pointer;padding:0}',
+			'@media (hover:hover){.tk-key:hover{background:var(--dsw-alias-interactive-bg-hover)}}',
 			'.tk-key.tk-off{opacity:.4;pointer-events:none}',
 			'.tk-key.tk-on{border-color:var(--dsw-alias-brand-primary);background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-brand-primary)}',
+			// pressed keys copy the shared ghost Button's active recipe; a JS class
+			// drives it because preventDefault on pointerdown suppresses :active
+			'.tk-key.tk-press{background:var(--dsw-alias-interactive-bg-active);border-color:var(--dsw-alias-border-l2)}',
 			'.tk-flash{position:absolute;left:0;right:0;bottom:100%;margin-bottom:6px;font-size:11px;color:var(--dsw-alias-state-warn-primary);text-align:center;pointer-events:none}'
 		].join('\n');
 
@@ -306,6 +310,16 @@ window.__ModuleLoader__.load({
 				return '\x1b\x7f';
 			};
 
+				/** Pressed-state feedback: the shared ghost Button's active recipe, driven
+			 *  by a class because preventDefault on pointerdown suppresses :active. */
+			const bindPressFeedback = (button) => {
+				button.addEventListener('pointerdown', () => button.classList.add('tk-press'));
+				const release = () => button.classList.remove('tk-press');
+				button.addEventListener('pointerup', release);
+				button.addEventListener('pointerleave', release);
+				button.addEventListener('pointercancel', release);
+			};
+
 			const bindKey = (row, id, label, text, onFire, repeatable) => {
 				const button = el('button', 'tk-key', text);
 				button.type = 'button';
@@ -313,6 +327,7 @@ window.__ModuleLoader__.load({
 				// keep the terminal's focus: never take it on press
 				button.addEventListener('pointerdown', (event) => event.preventDefault());
 				button.addEventListener('contextmenu', (event) => event.preventDefault());
+				bindPressFeedback(button);
 				if (repeatable) {
 					const step = () => send(onFire());
 					button.addEventListener('pointerdown', (event) => {
@@ -341,6 +356,7 @@ window.__ModuleLoader__.load({
 				button.setAttribute('aria-label', label);
 				button.setAttribute('aria-pressed', 'false');
 				button.addEventListener('pointerdown', (event) => event.preventDefault());
+				bindPressFeedback(button);
 				button.addEventListener('click', () => toggle());
 				row.appendChild(button);
 				keyButtons.push({ id, button });
