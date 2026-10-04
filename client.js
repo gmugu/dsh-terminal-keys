@@ -46,7 +46,7 @@ window.__ModuleLoader__.load({
 		const BASE_CSS = [
 			'[data-plugin="terminal-keys"]{position:fixed;z-index:2000;font-family:system-ui,"Segoe UI","Microsoft YaHei",sans-serif}',
 			'[data-plugin="terminal-keys"].tk-card{display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:12px;background:var(--dsw-alias-bg-overlay);border:1px solid var(--dsw-alias-border-l2);box-shadow:0 10px 30px rgba(0,0,0,.28);width:196px;box-sizing:border-box;touch-action:none}',
-			'.tk-head{display:flex;align-items:center;padding:0 2px;cursor:grab}',
+			'.tk-head{display:flex;align-items:center;padding:6px 2px;cursor:grab}',
 			'.tk-title{color:var(--dsw-alias-label-secondary);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
 			'.tk-grip{color:var(--dsw-alias-label-tertiary);font-size:11px;margin-right:4px;flex:none}',
 			'.tk-main{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}',
@@ -353,7 +353,8 @@ window.__ModuleLoader__.load({
 				head.appendChild(el('span', 'tk-grip', '⠿'));
 				head.appendChild(el('span', 'tk-title', t('title')));
 				card.appendChild(head);
-				dragCleanups.push(makeDraggable(head, () => ({ x: card.offsetLeft, y: card.offsetTop })));
+				// the whole card is the drag surface; makeDraggable leaves buttons alone
+				dragCleanups.push(makeDraggable(card, () => ({ x: card.offsetLeft, y: card.offsetTop })));
 
 				// fixed 4×2 grid: Esc Tab Ctrl Alt / ← ↑ ↓ →
 				const main = el('div', 'tk-main');
